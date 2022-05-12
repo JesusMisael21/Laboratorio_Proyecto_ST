@@ -45,6 +45,10 @@ def tap(x, y):
     counter += 1
     print(counter)
 
+    # Until finish, to say "You finished!"
+    if hide == [False] * 64:
+        print("You finished!")
+
 def draw():
     "Draw image and tiles."
     clear()
