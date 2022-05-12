@@ -1,23 +1,33 @@
-"""Pacman, classic arcade game.
+"""
+Pacman, classic arcade game.
 
 Exercises
 
 1. Change the board.
-2. Change the number of ghosts.
-3. Change where pacman starts.
-4. Make the ghosts faster/slower.
-5. Make the ghosts smarter.
+2. Make the ghosts faster
+
 """
 
+"""
+Importando librerias para correcto funcionamiento
+"""
 from random import choice
-from turtle import *
-
+from turtle import Turtle, up, goto, bgcolor, dot
+from turtle import clear, update, ontimer
+from turtle import setup, hideturtle, tracer, listen, onkey, done
 from freegames import floor, vector
 
+"""
+Se definen variables y objetos
+"""
 state = {'score': 0}
 path = Turtle(visible=False)
 writer = Turtle(visible=False)
 aim = vector(5, 0)
+
+"""
+Vectores que describen las posiciones de pacman y los ghosts
+"""
 pacman = vector(-40, -80)
 ghosts = [
     [vector(-180, 160), vector(5, 0)],
@@ -25,20 +35,23 @@ ghosts = [
     [vector(100, 160), vector(0, -5)],
     [vector(100, -160), vector(-5, 0)],
 ]
-# fmt: off
+
+"""
+Arreglo que define el tablero de juego, tanto las paredes como las pastillas
+"""
 tiles = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
     0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
-    0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0,
+    0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0,
     0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
     0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0,
     0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+    0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0,
     0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
     0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0,
     0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0,
@@ -48,11 +61,12 @@ tiles = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ]
-# fmt: on
-
 
 def square(x, y):
-    """Draw square using path at (x, y)."""
+    """
+    Mediante esta funcion se dibujaran cuadrados empezando en el vertice
+    establecido en los parametros x,y
+    """
     path.up()
     path.goto(x, y)
     path.down()
@@ -61,12 +75,14 @@ def square(x, y):
     for count in range(4):
         path.forward(20)
         path.left(90)
-
     path.end_fill()
 
 
 def offset(point):
-    """Return offset of point in tiles."""
+    """
+    Rgresa un valor de desplazamiento basado en los indices
+    del arreglo tiles
+    """
     x = (floor(point.x, 20) + 200) / 20
     y = (180 - floor(point.y, 20)) / 20
     index = int(x + y * 20)
@@ -74,7 +90,10 @@ def offset(point):
 
 
 def valid(point):
-    """Return True if point is valid in tiles."""
+    """
+    Retorna un valor booleano en base a si el punto actual es una
+    posicion valida respecto a tiles
+    """
     index = offset(point)
 
     if tiles[index] == 0:
@@ -89,18 +108,20 @@ def valid(point):
 
 
 def world():
-    """Draw world using path."""
-    bgcolor('black')
-    path.color('blue')
+    """
+    Dibuja las paredes, sendero y pildoras en un lienzo llamado path
+    """
+    bgcolor("white")
+    path.color('green')
 
     for index in range(len(tiles)):
         tile = tiles[index]
-
+        # Dibuja Muros
         if tile > 0:
             x = (index % 20) * 20 - 200
             y = 180 - (index // 20) * 20
             square(x, y)
-
+            # Dibuja pildoras
             if tile == 1:
                 path.up()
                 path.goto(x + 10, y + 10)
@@ -108,7 +129,10 @@ def world():
 
 
 def move():
-    """Move pacman and all ghosts."""
+    """
+    Mediante esta funcion se genera y realiza el movimiento de Pacman
+    y de los ghost
+    """
     writer.undo()
     writer.write(state['score'])
 
@@ -118,18 +142,27 @@ def move():
         pacman.move(aim)
 
     index = offset(pacman)
-
+    
+    """
+    Se suman puntos y se quitan la pildoras del tablero
+    """
     if tiles[index] == 1:
         tiles[index] = 2
         state['score'] += 1
         x = (index % 20) * 20 - 200
         y = 180 - (index // 20) * 20
         square(x, y)
-
+    
+    """
+    Dibuja a pacman
+    """
     up()
     goto(pacman.x + 10, pacman.y + 10)
     dot(20, 'yellow')
-
+    
+    """
+    Ciclo para dibujar a los ghosts
+    """
     for point, course in ghosts:
         if valid(point + course):
             point.move(course)
@@ -143,13 +176,14 @@ def move():
             plan = choice(options)
             course.x = plan.x
             course.y = plan.y
-
         up()
         goto(point.x + 10, point.y + 10)
         dot(20, 'red')
-
     update()
 
+    """
+    Condición que termina el juego
+    """
     for point, course in ghosts:
         if abs(pacman - point) < 20:
             return
@@ -158,7 +192,9 @@ def move():
 
 
 def change(x, y):
-    """Change pacman aim if valid."""
+    """
+    Se valida la posicion de pacman para luego cambiar su ubicacion
+    """
     if valid(pacman + vector(x, y)):
         aim.x = x
         aim.y = y
@@ -167,10 +203,16 @@ def change(x, y):
 setup(420, 420, 370, 0)
 hideturtle()
 tracer(False)
+writer.up()
 writer.goto(160, 160)
-writer.color('white')
+writer.down()
+writer.color('black')
 writer.write(state['score'])
 listen()
+
+"""
+Lectura del teclado para poder manejar a pacman
+"""
 onkey(lambda: change(5, 0), 'Right')
 onkey(lambda: change(-5, 0), 'Left')
 onkey(lambda: change(0, 5), 'Up')
